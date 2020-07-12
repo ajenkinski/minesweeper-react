@@ -166,7 +166,6 @@ export class MinesweeperGame {
         const neighborOffsets: Coord[] = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
 
         // Make first cleared mine be in an open area
-        debugger
         if (!this.state.minesAllocated) {
             const noMineCoords = neighborOffsets
                     .map(([dr, dc]) => [dr + row, dc + column] as Coord)
