@@ -36,7 +36,7 @@ class App extends React.Component<AppProps, { game: msg.MinesweeperGame }> {
     }
 
     newGame() {
-        this.setState(state => ({...state, game: new msg.MinesweeperGame(20, 30, 200)}))
+        this.setState(state => ({...state, game: new msg.MinesweeperGame(20, 30, 150)}))
     }
 
     render() {
