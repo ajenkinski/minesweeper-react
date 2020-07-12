@@ -1,12 +1,20 @@
 import React from 'react';
 import * as msg from './minesweeper-game';
+import './MinesweeperBoard.css';
 
+interface CellProps {
+    cell: msg.CellState
+    onClick(event: any): void
+}
 
-class Cell extends React.PureComponent<{ cell: msg.CellState }> {
+class Cell extends React.PureComponent<CellProps> {
     render() {
         const cell = this.props.cell;
         let char = ' ';
+        const cssClasses = ['cell'];
+
         if (msg.isExposed(cell)) {
+            cssClasses.push('cell-exposed')
             if (cell.exploded) {
                 char = 'X'
             }
@@ -22,15 +30,23 @@ class Cell extends React.PureComponent<{ cell: msg.CellState }> {
         }
 
         return (
-            <button className="cell">{char}</button>
+            <button className={cssClasses.join(' ')} onClick={this.props.onClick}>{char}</button>
         )
     }
 }
 
-export class MinesweeperBoard extends React.PureComponent<{ game: msg.MinesweeperGame }> {
+interface MinesweeperBoardProps {
+    game: msg.MinesweeperGame
+    handleCellClick(row: number, column: number, event: any): void
+}
+
+export class MinesweeperBoard extends React.PureComponent<MinesweeperBoardProps> {
     renderCell(row: number, column: number) {
         return (
-            <Cell cell={this.props.game.cellState(row, column)}/>
+            <Cell key={`${row}_${column}`}
+                  cell={this.props.game.cellState(row, column)}
+                  onClick={event => this.props.handleCellClick(row, column, event)}
+            />
         )
     }
 
@@ -43,7 +59,7 @@ export class MinesweeperBoard extends React.PureComponent<{ game: msg.Minesweepe
             for (let colNum = 0; colNum < game.numColumns; colNum++) {
                 row[colNum] = this.renderCell(rowNum, colNum)
             }
-            rows[rowNum] = (<div className="board-row">{row}</div>)
+            rows[rowNum] = (<div key={rowNum} className="board-row">{row}</div>)
         }
 
         return (
