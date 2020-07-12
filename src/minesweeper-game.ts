@@ -21,6 +21,8 @@ Exposed cells can be in the following states:
 import {List, Range, Record, RecordOf} from 'immutable'
 import _ from 'lodash'
 
+type Coord = [number, number];
+
 export enum Marker {
     Mine,
     Maybe
@@ -140,20 +142,42 @@ export class MinesweeperGame {
             }
         }
 
-        // count neighbors with mines
-        let numMines = 0;
-        for (let [dr, dc] of [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]) {
-            const nrow = row + dr, ncol = column + dc;
-            if (nrow >= 0 && nrow < this.numRows && ncol >= 0 && ncol < this.numColumns && this.cell(nrow, ncol).hasMine) {
-                numMines++;
-            }
-        }
+        const cellsToClear: Coord[] = [[row, column]];
+        const newCells = this.cells.withMutations(cells => {
+            while (cellsToClear.length > 0) {
+                const [row, column] = cellsToClear.pop()!;
+                const oldCell = this.cell(row, column);
 
-        const newCell = oldCell.set('state', makeExposedCellState({
-            exploded: oldCell.hasMine,
-            numMinesNearby: numMines
-        }));
-        return this.setCell(row, column, newCell)
+
+                const neighborOffsets: Coord[] = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+                const neighborCoords = neighborOffsets
+                    .map(([dr, dc]) => [dr + row, dc + column] as Coord)
+                    .filter(([r, c]) => r >= 0 && r < this.numRows && c >= 0 && c < this.numColumns);
+                // count neighbors with mines
+                let numMines = 0;
+                for (let [nrow, ncol] of neighborCoords) {
+                    if (this.cell(nrow, ncol).hasMine) {
+                        numMines++;
+                    }
+                }
+
+                const newCell = oldCell.set('state', makeExposedCellState({
+                    exploded: oldCell.hasMine,
+                    numMinesNearby: numMines
+                }));
+                cells = cells.set(row * this.numColumns + column, newCell);
+
+                if (newCell.state.kind === 'exposed' && !newCell.state.exploded && newCell.state.numMinesNearby === 0) {
+                    for (let [r, c] of neighborCoords) {
+                        if (!isExposed(this.cell(r, c).state)) {
+                            cellsToClear.push([r, c])
+                        }
+                    }
+                }
+            }
+        });
+
+        return new MinesweeperGame(this.numRows, this.numColumns, newCells)
     }
 
     markCell(row: number, column: number, marker?: Marker): MinesweeperGame {
