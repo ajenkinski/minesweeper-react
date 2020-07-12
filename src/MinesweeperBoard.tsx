@@ -17,10 +17,15 @@ class Cell extends React.PureComponent<CellProps> {
             cssClasses.push('cell-exposed')
             if (cell.exploded) {
                 char = 'X'
+            } else {
+                const num = cell.numMinesNearby;
+                if (num !== 0) {
+                    char = `${num}`
+                }
             }
         } else {
             switch (cell.marker) {
-                case msg.Marker.Bomb:
+                case msg.Marker.Mine:
                     char = 'B';
                     break;
                 case msg.Marker.Maybe:

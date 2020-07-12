@@ -23,10 +23,10 @@ describe('minesweeper', () => {
     });
 
     test('Set marker', () => {
-        const game2 = game.markCell(1, 2, msg.Marker.Bomb);
+        const game2 = game.markCell(1, 2, msg.Marker.Mine);
         const cell = game2.cellState(1, 2);
         expect(cell.kind).toEqual('covered');
-        expect((cell as msg.CoveredCellState).marker).toEqual(msg.Marker.Bomb)
+        expect((cell as msg.CoveredCellState).marker).toEqual(msg.Marker.Mine)
     });
 
     test('Clear cell with no bomb', () => {
@@ -38,7 +38,7 @@ describe('minesweeper', () => {
 
     test('Create game with numBombs', () => {
         const game = new msg.MinesweeperGame(5, 6, 10);
-        const numBombs = game['cells'].reduce((n, cell) => cell.hasBomb ? n + 1 : n, 0);
+        const numBombs = game['cells'].reduce((n, cell) => cell.hasMine ? n + 1 : n, 0);
         expect(numBombs).toEqual(10)
     })
 

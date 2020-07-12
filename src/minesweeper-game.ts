@@ -4,25 +4,25 @@ return a new instance.
 
 Essentially, the game state consists of an array of rows * columns cells.
 
-Each cell has an attribute which specifies whether the cell contains a bomb, but this attribute is not visible to a
+Each cell has an attribute which specifies whether the cell contains a mine, but this attribute is not visible to a
 player until the cell is exposed.
 
 At any given time, a cell is either hidden or exposed.
 
 Hidden cells can have the following markers applied to them:
-* Bomb: the cell is marked as containing a bomb
-* Maybe: the cell is marked as maybe containing a bomb
+* Mine: the cell is marked as containing a mine
+* Maybe: the cell is marked as maybe containing a mine
 
 Exposed cells can be in the following states:
-* Clear: does not contain a bomb
-* Exploded: contains an exploded bomb.
+* Clear: does not contain a mine
+* Exploded: contains an exploded mine.
  */
 
 import {List, Range, Record, RecordOf} from 'immutable'
 import _ from 'lodash'
 
 export enum Marker {
-    Bomb,
+    Mine,
     Maybe
 }
 
@@ -37,10 +37,16 @@ export interface ExposedCellState {
     numMinesNearby: number
 }
 
+export interface GameInfo {
+    numMines: number
+    numMarkedMines: number
+    numExploded: number
+}
+
 export type CellState = CoveredCellState | ExposedCellState
 
 export interface Cell {
-    hasBomb: boolean
+    hasMine: boolean
     state: CellState
 }
 
@@ -50,7 +56,7 @@ const makeExposedCellState = Record<ExposedCellState>({
     exploded: false,
     numMinesNearby: 0
 });
-const makeCell = Record<Cell>({hasBomb: false, state: makeCoveredCellState()});
+const makeCell = Record<Cell>({hasMine: false, state: makeCoveredCellState()});
 
 /**
  * Ensures that a cell is composed of Records
@@ -71,25 +77,42 @@ export class MinesweeperGame {
 
     constructor(numRows: number, numColumns: number);
     constructor(numRows: number, numColumns: number, cells: List<Cell>);
-    constructor(numRows: number, numColumns: number, numBombs: number);
-    constructor(readonly numRows: number, readonly numColumns: number, cellsOrNumBombs?: any) {
-        if (List.isList(cellsOrNumBombs)) {
-            const cells = cellsOrNumBombs as List<Cell>;
+    constructor(numRows: number, numColumns: number, numMines: number);
+    constructor(readonly numRows: number, readonly numColumns: number, cellsOrNumMines?: any) {
+        if (List.isList(cellsOrNumMines)) {
+            const cells = cellsOrNumMines as List<Cell>;
             if (cells.size !== numRows * numColumns) {
                 throw Error('Length of cells must be numRows * numColumns')
             }
             this.cells = cells.map(c => makeCellRecord(c))
         } else {
-            const numBombs = typeof cellsOrNumBombs === 'undefined' ? 0 : cellsOrNumBombs as number;
-            const bombLocations = new Set(_.sampleSize(_.range(numRows * numColumns), numBombs));
+            const numMines = typeof cellsOrNumMines === 'undefined' ? 0 : cellsOrNumMines as number;
+            const mineLocations = new Set(_.sampleSize(_.range(numRows * numColumns), numMines));
 
             this.cells = Range(0, numRows * numColumns).map(i => makeCell({
-                hasBomb: bombLocations.has(i)})).toList()
+                hasMine: mineLocations.has(i)
+            })).toList()
         }
     }
 
-    get numExposed() {
+    get numExposed(): number {
         return this.cells.reduce((n, cell) => isExposed(cell.state) ? n + 1 : n, 0)
+    }
+
+    get gameInfo(): GameInfo {
+        return this.cells.reduce((info, cell) => {
+                const hasMarkedMine = isExposed(cell.state) ? cell.state.exploded : cell.state.marker === Marker.Mine;
+                return {
+                    numMines: info.numMines + (cell.hasMine ? 1 : 0),
+                    numMarkedMines: info.numMarkedMines + (hasMarkedMine ? 1 : 0),
+                    numExploded: info.numExploded + (isExposed(cell.state) && cell.state.exploded ? 1 : 0)
+                }
+            },
+            {
+                numMines: 0,
+                numMarkedMines: 0,
+                numExploded: 0
+            })
     }
 
     cellState(row: number, column: number): CellState {
@@ -102,33 +125,33 @@ export class MinesweeperGame {
             return this
         }
 
-        // prevent first cleared cell from being a bomb
-        if (oldCell.hasBomb && this.numExposed === 0) {
-            // exchange the bomb with another cell
+        // prevent first cleared cell from being a mine
+        if (oldCell.hasMine && this.numExposed === 0) {
+            // exchange the mine with another cell
             const currentIdx = row * this.numColumns + column;
             for (let i = 0; i < this.cells.size; i++) {
-                if (i !== currentIdx && !this.cells.get(i)!.hasBomb) {
+                if (i !== currentIdx && !this.cells.get(i)!.hasMine) {
                     const newCells = this.cells
-                        .setIn([currentIdx, 'hasBomb'], false)
-                        .setIn([i, 'hasBomb'], true);
+                        .setIn([currentIdx, 'hasMine'], false)
+                        .setIn([i, 'hasMine'], true);
                     const newGame = new MinesweeperGame(this.numRows, this.numColumns, newCells);
                     return newGame.clearCell(row, column)
                 }
             }
         }
 
-        // count neighbors with bombs
-        let numBombs = 0;
+        // count neighbors with mines
+        let numMines = 0;
         for (let [dr, dc] of [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]) {
             const nrow = row + dr, ncol = column + dc;
-            if (nrow >= 0 && nrow < this.numRows && ncol >= 0 && ncol < this.numColumns && this.cell(nrow, ncol).hasBomb) {
-                numBombs++;
+            if (nrow >= 0 && nrow < this.numRows && ncol >= 0 && ncol < this.numColumns && this.cell(nrow, ncol).hasMine) {
+                numMines++;
             }
         }
 
         const newCell = oldCell.set('state', makeExposedCellState({
-            exploded: oldCell.hasBomb,
-            numMinesNearby: numBombs
+            exploded: oldCell.hasMine,
+            numMinesNearby: numMines
         }));
         return this.setCell(row, column, newCell)
     }
