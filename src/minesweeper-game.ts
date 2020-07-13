@@ -153,6 +153,10 @@ export class MinesweeperGame {
         return {...info, numMines: this.state.numMines}
     }
 
+    toJSON(): GameStateFields {
+        return this.state.toJSON()
+    }
+
     cellState(row: number, column: number): CellState {
         return this.cell(row, column).state
     }

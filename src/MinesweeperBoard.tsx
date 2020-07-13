@@ -4,10 +4,16 @@ import './MinesweeperBoard.css';
 
 interface CellProps {
     cell: msg.CellState
-    onClick(event: any): void
+    row: number
+    column: number
+    handleCellClick(row: number, column: number, event: any): void
 }
 
 class Cell extends React.PureComponent<CellProps> {
+    onClick(event: any) {
+        this.props.handleCellClick(this.props.row, this.props.column, event)
+    }
+
     render() {
         const cell = this.props.cell;
         let char = ' ';
@@ -35,7 +41,8 @@ class Cell extends React.PureComponent<CellProps> {
         }
 
         return (
-            <button className={cssClasses.join(' ')} onClick={this.props.onClick}>{char}</button>
+            <button className={cssClasses.join(' ')}
+                    onClick={event => this.onClick(event)}>{char}</button>
         )
     }
 }
@@ -50,7 +57,9 @@ export class MinesweeperBoard extends React.PureComponent<MinesweeperBoardProps>
         return (
             <Cell key={`${row}_${column}`}
                   cell={this.props.game.cellState(row, column)}
-                  onClick={event => this.props.handleCellClick(row, column, event)}
+                  row={row}
+                  column={column}
+                  handleCellClick={this.props.handleCellClick}
             />
         )
     }

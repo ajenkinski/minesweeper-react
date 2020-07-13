@@ -36,3 +36,9 @@
     transform: rotate(360deg);
   }
 }
+
+.game-config {
+  margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: 16ch 6ch;
+}
