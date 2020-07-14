@@ -3,6 +3,13 @@ import './App.css';
 import * as msg from './minesweeper-game';
 import {MinesweeperBoard} from './MinesweeperBoard'
 
+enum CommandType {
+    Clear,
+    ClearNeighbors,
+    MarkMine,
+    MarkMaybe
+}
+
 interface AppProps {
     name: string
 }
@@ -13,6 +20,34 @@ interface AppState {
     numMines: number,
     game: msg.MinesweeperGame
     history: msg.MinesweeperGame[]
+}
+
+function clearNeighbors(game: msg.MinesweeperGame, row: number, column: number): msg.MinesweeperGame {
+    const cell = game.cellState(row, column);
+    if (cell.kind !== 'exposed') {
+        return game
+    }
+
+    // count marked neighbors
+    const neighbors = game.neighbors(row, column);
+    const numMarked = neighbors.reduce((n, [_, celln]) => {
+        if (celln.kind === 'covered' && celln.marker === msg.Marker.Mine) {
+            return n + 1
+        }
+        return n
+    }, 0);
+
+    // only clear if correct number of neighbors are marked
+    if (numMarked !== cell.numMinesNearby) {
+        return game
+    }
+
+    return neighbors.reduce((game_, [[r, c], cell_]) => {
+        if (cell_.kind === 'covered' && cell_.marker !== msg.Marker.Mine) {
+            return game_.clearCell(r, c)
+        }
+        return game_
+    }, game)
 }
 
 class App extends React.Component<AppProps, AppState> {
@@ -32,11 +67,13 @@ class App extends React.Component<AppProps, AppState> {
     handleCellClick(row: number, column: number, event: any) {
         // event object will get modified after handler returns, so don't try to access it in the setState handler,
         // since that might execute after this method returns.
-        let marker: msg.Marker | undefined;
-        if (event.shiftKey) {
-            marker = msg.Marker.Mine
+        let command = CommandType.Clear;
+        if (event.shiftKey && event.altKey) {
+            command = CommandType.MarkMaybe
+        } else if (event.shiftKey) {
+            command = CommandType.MarkMine
         } else if (event.altKey) {
-            marker = msg.Marker.Maybe
+            command = CommandType.ClearNeighbors
         }
 
         this.setState(state => {
@@ -46,12 +83,25 @@ class App extends React.Component<AppProps, AppState> {
             }
             const cell = game.cellState(row, column);
             let newGame = game;
-            if (typeof marker !== 'undefined') {
-                if (cell.kind === 'covered') {
-                    newGame = game.markCell(row, column, cell.marker === marker ? undefined : marker)
+
+            switch (command) {
+                case CommandType.Clear:
+                    newGame = game.clearCell(row, column);
+                    break;
+                case CommandType.MarkMine:
+                case CommandType.MarkMaybe: {
+                    if (cell.kind === 'covered') {
+                        const marker = command === CommandType.MarkMaybe ? msg.Marker.Maybe : msg.Marker.Mine;
+                        newGame = game.markCell(row, column, cell.marker === marker ? undefined : marker);
+                    }
+                    break
                 }
-            } else {
-                newGame = game.clearCell(row, column)
+                case CommandType.ClearNeighbors: {
+                    newGame = clearNeighbors(game, row, column);
+                    break
+                }
+                default:
+                    throw Error(`Unexpected command: ${command}`)
             }
 
             return {...state, game: newGame, history: [...state.history, game]}
@@ -92,7 +142,8 @@ class App extends React.Component<AppProps, AppState> {
                 <ul>
                     <li>Click to clear a cell</li>
                     <li>Shift-click to mark a cell as a mine</li>
-                    <li>Alt-click or Option-click to mark a cell with ?</li>
+                    <li>Alt-click or Option-click to clear neighbors of cleared cell</li>
+                    <li>Alt-Shift-click or Option-Shift-click to mark a cell with ?</li>
                 </ul>
                 <div className="game-config">
                     <label htmlFor="num-rows">Number of rows: </label>

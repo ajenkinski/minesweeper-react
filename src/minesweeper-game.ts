@@ -92,6 +92,9 @@ const makeGameState = Record<GameStateFields>({
 
 type GameState = RecordOf<GameStateFields>;
 
+const neighborOffsets: Coord[] = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+
+
 export class MinesweeperGame {
     private readonly state: GameState;
 
@@ -157,6 +160,12 @@ export class MinesweeperGame {
         return this.state.toJSON()
     }
 
+    neighbors(row: number, column: number): [Coord, CellState][] {
+        return neighborOffsets.map(([dr, dc]) => [dr + row, dc + column] as Coord)
+            .filter(([r, c]) => r >= 0 && r < this.numRows && c >= 0 && c < this.numColumns)
+            .map(([r, c]) => [[r, c], this.cellState(r, c)])
+    }
+
     cellState(row: number, column: number): CellState {
         return this.cell(row, column).state
     }
@@ -167,13 +176,12 @@ export class MinesweeperGame {
             return this
         }
 
-        const neighborOffsets: Coord[] = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
-
-        // Make first cleared mine be in an open area
+        // Allocate mines if this is the first cell being cleared
         if (!this.state.minesAllocated) {
+            // Make it so initial cleared cell is in an open area
             const noMineCoords = neighborOffsets
-                    .map(([dr, dc]) => [dr + row, dc + column] as Coord)
-                    .filter(([r, c]) => r >= 0 && r < this.numRows && c >= 0 && c < this.numColumns);
+                .map(([dr, dc]) => [dr + row, dc + column] as Coord)
+                .filter(([r, c]) => r >= 0 && r < this.numRows && c >= 0 && c < this.numColumns);
             noMineCoords.push([row, column]);
             const noMineIndexes = noMineCoords.map(([r, c]) => r * this.numColumns + c);
             const potentialMineLocations = _.difference(_.range(this.numRows * this.numColumns), noMineIndexes);
