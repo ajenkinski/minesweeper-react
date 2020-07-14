@@ -1,7 +1,5 @@
 import _ from 'lodash'
 import * as msg from "./minesweeper-game";
-import {Marker} from "./minesweeper-game";
-import {List} from 'immutable'
 
 function allCoords(numRows: number, numCols: number): number[][] {
     const array = _.times(numRows, row => _.times(numCols, col => [row, col]));
@@ -37,8 +35,8 @@ describe('minesweeper', () => {
     })
 
     test('Create game with numBombs', () => {
-        const game = new msg.MinesweeperGame(5, 6, 10);
-        const numBombs = game['cells'].reduce((n, cell) => cell.hasMine ? n + 1 : n, 0);
+        const game = new msg.MinesweeperGame(5, 6, 10).clearCell(0, 0);
+        const numBombs = game['state'].cells.reduce((n, cell) => cell.hasMine ? n + 1 : n, 0);
         expect(numBombs).toEqual(10)
     })
 

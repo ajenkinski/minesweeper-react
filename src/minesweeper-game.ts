@@ -102,14 +102,14 @@ export class MinesweeperGame {
     constructor(numRows: number, numColumns: number, cells: List<Cell>);
     constructor(numRows: number, numColumns: number, numMines: number);
     constructor(gameState: GameState);
-    constructor(numRowsOrState: any, maybeNumColumns?: number, cellsOrNumMines?: any) {
-        if (Record.isRecord(numRowsOrState)) {
-            this.state = numRowsOrState as GameState
+    constructor(...args: any) {
+        if (Record.isRecord(args[0])) {
+            this.state = args[0] as GameState
         } else {
-            const numRows = numRowsOrState as number;
-            const numColumns = maybeNumColumns as number;
-            if (List.isList(cellsOrNumMines)) {
-                const cells = cellsOrNumMines as List<Cell>;
+            const numRows = args[0] as number;
+            const numColumns = args[1] as number;
+            if (List.isList(args[2])) {
+                const cells = args[2] as List<Cell>;
                 if (cells.size !== numRows * numColumns) {
                     throw Error('Length of cells must be numRows * numColumns')
                 }
@@ -121,8 +121,8 @@ export class MinesweeperGame {
                     minesAllocated: true
                 })
             } else {
+                const numMines: number = args[2] ?? 0;
                 const cells = List.of(..._.times(numRows * numColumns, () => makeCell()));
-                const numMines = typeof cellsOrNumMines === 'number' ? cellsOrNumMines as number : 0;
                 this.state = makeGameState({cells, numRows, numColumns, numMines})
             }
         }

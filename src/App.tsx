@@ -10,18 +10,6 @@ enum CommandType {
     MarkMaybe
 }
 
-interface AppProps {
-    name: string
-}
-
-interface AppState {
-    numRows: number,
-    numColumns: number,
-    numMines: number,
-    game: msg.MinesweeperGame
-    history: msg.MinesweeperGame[]
-}
-
 function clearNeighbors(game: msg.MinesweeperGame, row: number, column: number): msg.MinesweeperGame {
     const cell = game.cellState(row, column);
     if (cell.kind !== 'exposed') {
@@ -48,6 +36,18 @@ function clearNeighbors(game: msg.MinesweeperGame, row: number, column: number):
         }
         return game_
     }, game)
+}
+
+interface AppProps {
+    name: string
+}
+
+interface AppState {
+    numRows: number,
+    numColumns: number,
+    numMines: number,
+    game: msg.MinesweeperGame
+    history: msg.MinesweeperGame[]
 }
 
 class App extends React.Component<AppProps, AppState> {
