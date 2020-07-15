@@ -164,10 +164,13 @@ export class MinesweeperGame {
         return this.state.toJSON()
     }
 
-    neighbors(row: number, column: number): [Coord, CellState][] {
+    neighborCoords(row: number, column: number): Coord[] {
         return neighborOffsets.map(([dr, dc]) => [dr + row, dc + column] as Coord)
             .filter(([r, c]) => r >= 0 && r < this.numRows && c >= 0 && c < this.numColumns)
-            .map(([r, c]) => [[r, c], this.cellState(r, c)])
+    }
+
+    neighbors(row: number, column: number): [Coord, CellState][] {
+        return this.neighborCoords(row, column).map(([r, c]) => [[r, c], this.cellState(r, c)])
     }
 
     cellState(row: number, column: number): CellState {
@@ -183,10 +186,7 @@ export class MinesweeperGame {
         // Allocate mines if this is the first cell being cleared
         if (!this.state.minesAllocated) {
             // Make it so initial cleared cell is in an open area
-            const noMineCoords = neighborOffsets
-                .map(([dr, dc]) => [dr + row, dc + column] as Coord)
-                .filter(([r, c]) => r >= 0 && r < this.numRows && c >= 0 && c < this.numColumns);
-            noMineCoords.push([row, column]);
+            const noMineCoords = this.neighborCoords(row, column).concat([[row, column]]);
             const noMineIndexes = noMineCoords.map(([r, c]) => r * this.numColumns + c);
             const potentialMineLocations = _.difference(_.range(this.numRows * this.numColumns), noMineIndexes);
             const mineLocations = new Set(_.sampleSize(potentialMineLocations, this.state.numMines));
@@ -202,9 +202,7 @@ export class MinesweeperGame {
                 const [row, column] = cellsToClear.pop()!;
                 const oldCell = this.cell(row, column);
 
-                const neighborCoords = neighborOffsets
-                    .map(([dr, dc]) => [dr + row, dc + column] as Coord)
-                    .filter(([r, c]) => r >= 0 && r < this.numRows && c >= 0 && c < this.numColumns);
+                const neighborCoords = this.neighborCoords(row, column);
                 // count neighbors with mines
                 let numMines = 0;
                 for (let [nrow, ncol] of neighborCoords) {
