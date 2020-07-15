@@ -241,14 +241,14 @@ export class MinesweeperGame {
         return this.setCell(row, column, newCell)
     }
 
-    private validateCoords(row: number, column: number) {
+    private validateCoord(row: number, column: number) {
         if (row < 0 || row >= this.numRows || column < 0 || column >= this.numColumns) {
             throw Error(`{row: ${row}, col: ${column}} out of bounds.  numRows: ${this.numRows}, numColumns: ${this.numColumns}`)
         }
     }
 
     private cell(row: number, column: number): RecordOf<Cell> {
-        this.validateCoords(row, column);
+        this.validateCoord(row, column);
         const cell = this.state.cells.get(row * this.numColumns + column);
         if (cell) {
             return cell

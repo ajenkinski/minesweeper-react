@@ -32,7 +32,7 @@ class Cell extends React.PureComponent<CellProps> {
         } else {
             switch (cell.marker) {
                 case msg.Marker.Mine:
-                    char = 'B';
+                    char = 'M';
                     break;
                 case msg.Marker.Maybe:
                     char = '?';

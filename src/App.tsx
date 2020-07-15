@@ -10,6 +10,17 @@ enum CommandType {
     MarkMaybe
 }
 
+/**
+ * Clear all neighbors of a cleared cell.  The cell must must be already exposed, not have an exploded mine, and must
+ * have the correct number of surrounding mines already marked.  If these conditions are met, then this function
+ * will call clearCell on all covered neighbors of this cell which are not marked with a mine.
+ *
+ * Returns the new game state with neighbors cleared, or the input game if conditions described above aren't met.
+ *
+ * @param game Game object
+ * @param row Row of cell
+ * @param column Column of cell
+ */
 function clearNeighbors(game: msg.MinesweeperGame, row: number, column: number): msg.MinesweeperGame {
     const cell = game.cellState(row, column);
     if (cell.kind !== 'exposed') {
@@ -68,12 +79,10 @@ class App extends React.Component<AppProps, AppState> {
         // event object will get modified after handler returns, so don't try to access it in the setState handler,
         // since that might execute after this method returns.
         let command = CommandType.Clear;
-        if (event.shiftKey && event.altKey) {
+        if (event.altKey) {
             command = CommandType.MarkMaybe
         } else if (event.shiftKey) {
             command = CommandType.MarkMine
-        } else if (event.altKey) {
-            command = CommandType.ClearNeighbors
         }
 
         this.setState(state => {
@@ -83,6 +92,10 @@ class App extends React.Component<AppProps, AppState> {
             }
             const cell = game.cellState(row, column);
             let newGame = game;
+
+            if (cell.kind === 'exposed' && command === CommandType.Clear) {
+                command = CommandType.ClearNeighbors
+            }
 
             switch (command) {
                 case CommandType.Clear:
@@ -140,10 +153,10 @@ class App extends React.Component<AppProps, AppState> {
             <div className="App">
                 <h1>{this.props.name}</h1>
                 <ul>
-                    <li>Click to clear a cell</li>
+                    <li>Click a covered cell to clear it</li>
+                    <li>Click a cleared cell to clear neighbors of cleared cell</li>
                     <li>Shift-click to mark a cell as a mine</li>
-                    <li>Alt-click or Option-click to clear neighbors of cleared cell</li>
-                    <li>Alt-Shift-click or Option-Shift-click to mark a cell with ?</li>
+                    <li>Alt-click or Option-click to mark a cell with ?</li>
                 </ul>
                 <div className="game-config">
                     <label htmlFor="num-rows">Number of rows: </label>
