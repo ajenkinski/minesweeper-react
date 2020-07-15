@@ -32,7 +32,22 @@ describe('minesweeper', () => {
         const cell = game2.cellState(3, 4);
         expect(cell.kind).toEqual('exposed');
         expect((cell as msg.ExposedCellState).exploded).toBeFalsy()
-    })
+    });
+
+    test('Clear cell with mine', () => {
+        const cells: msg.Cell[] = [
+            {hasMine: true, state: {kind: "covered"}},
+            {hasMine: true, state: {kind: "covered"}},
+            {hasMine: false, state: {kind: "covered"}},
+            {hasMine: false, state: {kind: "covered"}}
+        ];
+        const game = new msg.MinesweeperGame(2, 2, cells);
+        const game2 = game.clearCell(0, 0);
+        const cell = game2.cellState(0, 0);
+
+        expect(cell.kind).toEqual('exposed');
+        expect((cell as msg.ExposedCellState).exploded).toBeTruthy()
+    });
 
     test('Create game with numBombs', () => {
         const game = new msg.MinesweeperGame(5, 6, 10).clearCell(0, 0);

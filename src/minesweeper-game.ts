@@ -52,21 +52,21 @@ export interface Cell {
     state: CellState
 }
 
-const makeCoveredCellState = Record<CoveredCellState>({kind: 'covered', marker: undefined});
-const makeExposedCellState = Record<ExposedCellState>({
+const CoveredCellState = Record<CoveredCellState>({kind: 'covered', marker: undefined});
+const ExposedCellState = Record<ExposedCellState>({
     kind: 'exposed',
     exploded: false,
     numMinesNearby: 0
 });
-const makeCell = Record<Cell>({hasMine: false, state: makeCoveredCellState()});
+const Cell = Record<Cell>({hasMine: false, state: CoveredCellState()});
 
 /**
  * Ensures that a cell is composed of Records
  * @param cell
  */
 function makeCellRecord(cell: Cell): RecordOf<Cell> {
-    const state = isExposed(cell.state) ? makeExposedCellState(cell.state) : makeCoveredCellState(cell.state);
-    return makeCell(cell).set('state', state)
+    const state = isExposed(cell.state) ? ExposedCellState(cell.state) : CoveredCellState(cell.state);
+    return Cell(cell).set('state', state)
 }
 
 export function isExposed(state: CellState): state is ExposedCellState {
@@ -82,7 +82,7 @@ interface GameStateFields {
     minesAllocated: boolean
 }
 
-const makeGameState = Record<GameStateFields>({
+const GameState = Record<GameStateFields>({
     cells: List<RecordOf<Cell>>(),
     numRows: 0,
     numColumns: 0,
@@ -95,11 +95,15 @@ type GameState = RecordOf<GameStateFields>;
 const neighborOffsets: Coord[] = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
 
 
+function isIterableCells(object: any): object is Iterable<Cell> {
+    return typeof object?.[Symbol.iterator] === 'function'
+}
+
 export class MinesweeperGame {
     private readonly state: GameState;
 
     constructor(numRows: number, numColumns: number);
-    constructor(numRows: number, numColumns: number, cells: List<Cell>);
+    constructor(numRows: number, numColumns: number, cells: Iterable<Cell>);
     constructor(numRows: number, numColumns: number, numMines: number);
     constructor(gameState: GameState);
     constructor(...args: any) {
@@ -108,12 +112,12 @@ export class MinesweeperGame {
         } else {
             const numRows = args[0] as number;
             const numColumns = args[1] as number;
-            if (List.isList(args[2])) {
-                const cells = args[2] as List<Cell>;
+            if (isIterableCells(args[2])) {
+                const cells = List<Cell>(args[2]);
                 if (cells.size !== numRows * numColumns) {
                     throw Error('Length of cells must be numRows * numColumns')
                 }
-                this.state = makeGameState({
+                this.state = GameState({
                     cells: cells.map(c => makeCellRecord(c)),
                     numRows,
                     numColumns,
@@ -122,8 +126,8 @@ export class MinesweeperGame {
                 })
             } else {
                 const numMines: number = args[2] ?? 0;
-                const cells = List.of(..._.times(numRows * numColumns, () => makeCell()));
-                this.state = makeGameState({cells, numRows, numColumns, numMines})
+                const cells = List.of(..._.times(numRows * numColumns, () => Cell()));
+                this.state = GameState({cells, numRows, numColumns, numMines})
             }
         }
     }
@@ -151,7 +155,7 @@ export class MinesweeperGame {
             {
                 numMarkedMines: 0,
                 numExploded: 0
-            })
+            });
 
         return {...info, numMines: this.state.numMines}
     }
@@ -209,7 +213,7 @@ export class MinesweeperGame {
                     }
                 }
 
-                const newCell = oldCell.set('state', makeExposedCellState({
+                const newCell = oldCell.set('state', ExposedCellState({
                     exploded: oldCell.hasMine,
                     numMinesNearby: numMines
                 }));
