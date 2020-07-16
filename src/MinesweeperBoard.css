@@ -17,6 +17,10 @@
   background: lightblue;
 }
 
+.cell-exploded {
+  background: red;
+}
+
 .cell:focus {
   outline: none;
 }

@@ -1,6 +1,8 @@
 import React from 'react';
-import * as msg from './minesweeper-game';
+import * as msg from './game/minesweeper-game';
 import './MinesweeperBoard.css';
+import mine_icon from './mine.svg';
+import flag_icon from './flag.svg';
 
 interface CellProps {
     cell: msg.CellState
@@ -16,33 +18,34 @@ class Cell extends React.PureComponent<CellProps> {
 
     render() {
         const cell = this.props.cell;
-        let char = ' ';
+        let content: any = ' ';
         const cssClasses = ['cell'];
 
         if (msg.isExposed(cell)) {
-            cssClasses.push('cell-exposed')
             if (cell.exploded) {
-                char = 'X'
+                cssClasses.push('cell-exploded');
+                content = <img src={mine_icon} alt={'mine'}/>;
             } else {
+                cssClasses.push('cell-exposed');
                 const num = cell.numMinesNearby;
                 if (num !== 0) {
-                    char = `${num}`
+                    content = `${num}`
                 }
             }
         } else {
             switch (cell.marker) {
                 case msg.Marker.Mine:
-                    char = 'M';
+                    content = <img src={flag_icon} alt={'flag'}/>;
                     break;
                 case msg.Marker.Maybe:
-                    char = '?';
+                    content = '?';
                     break;
             }
         }
 
         return (
             <button className={cssClasses.join(' ')}
-                    onClick={event => this.onClick(event)}>{char}</button>
+                    onClick={event => this.onClick(event)}>{content}</button>
         )
     }
 }

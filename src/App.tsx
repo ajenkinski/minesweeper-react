@@ -1,6 +1,6 @@
 import React from 'react';
 import './App.css';
-import * as msg from './minesweeper-game';
+import * as msg from './game/minesweeper-game';
 import {MinesweeperBoard} from './MinesweeperBoard'
 
 enum CommandType {
@@ -180,9 +180,11 @@ class App extends React.Component<AppProps, AppState> {
                            onChange={this.linkStateHandler('numMines', Number)}
                            id="num-mines"/>
                 </div>
-                Mines left: {info.numMines - info.numMarkedMines}
-                <button onClick={() => this.newGame()} style={{marginLeft: '10px'}}>New Game</button>
-                <button onClick={() => this.undoMove()} style={{marginLeft: '10px'}}>Undo</button>
+                <div style={{marginBottom: '5px'}}>
+                    Mines left: {info.numMines - info.numMarkedMines}
+                    <button onClick={() => this.newGame()} style={{marginLeft: '10px'}}>New Game</button>
+                    <button onClick={() => this.undoMove()} style={{marginLeft: '10px'}}>Undo</button>
+                </div>
                 <MinesweeperBoard game={this.state.game} handleCellClick={this.handleCellClick}/>
             </div>
         );

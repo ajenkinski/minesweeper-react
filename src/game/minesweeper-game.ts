@@ -92,9 +92,6 @@ const GameState = Record<GameStateFields>({
 
 type GameState = RecordOf<GameStateFields>;
 
-const neighborOffsets: Coord[] = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
-
-
 function isIterableCells(object: any): object is Iterable<Cell> {
     return typeof object?.[Symbol.iterator] === 'function'
 }
@@ -165,6 +162,7 @@ export class MinesweeperGame {
     }
 
     neighborCoords(row: number, column: number): Coord[] {
+        const neighborOffsets: Coord[] = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
         return neighborOffsets.map(([dr, dc]) => [dr + row, dc + column] as Coord)
             .filter(([r, c]) => r >= 0 && r < this.numRows && c >= 0 && c < this.numColumns)
     }
