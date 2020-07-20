@@ -16,6 +16,12 @@ class Cell extends React.PureComponent<CellProps> {
         this.props.handleCellClick(this.props.row, this.props.column, event)
     }
 
+    onRightClick(event: any) {
+        // prevent context menu from appearing
+        event.preventDefault();
+        this.props.handleCellClick(this.props.row, this.props.column, event)
+    }
+
     render() {
         const cell = this.props.cell;
         let content: any = ' ';
@@ -45,7 +51,11 @@ class Cell extends React.PureComponent<CellProps> {
 
         return (
             <button className={cssClasses.join(' ')}
-                    onClick={event => this.onClick(event)}>{content}</button>
+                    onClick={event => this.onClick(event)}
+                    onContextMenu={event => this.onRightClick(event)}
+            >
+                {content}
+            </button>
         )
     }
 }

@@ -79,10 +79,10 @@ class App extends React.Component<AppProps, AppState> {
         // event object will get modified after handler returns, so don't try to access it in the setState handler,
         // since that might execute after this method returns.
         let command = CommandType.Clear;
-        if (event.altKey) {
-            command = CommandType.MarkMaybe
-        } else if (event.shiftKey) {
+        if (event.button === 2 || event.ctrlKey) {
             command = CommandType.MarkMine
+        } else if (event.altKey) {
+            command = CommandType.MarkMaybe
         }
 
         this.setState(state => {
@@ -155,7 +155,7 @@ class App extends React.Component<AppProps, AppState> {
                 <ul>
                     <li>Click a covered cell to clear it</li>
                     <li>Click a cleared cell to clear neighbors of cleared cell</li>
-                    <li>Shift-click to mark a cell as a mine</li>
+                    <li>Right-click or Ctrl-click to mark a cell as a mine</li>
                     <li>Alt-click or Option-click to mark a cell with ?</li>
                 </ul>
                 <div className="game-config">
