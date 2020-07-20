@@ -8,15 +8,20 @@ interface CellProps {
     cell: msg.CellState
     row: number
     column: number
-    handleCellClick(row: number, column: number, event: any): void
+    handleCellClick(row: number, column: number, event: React.MouseEvent): void
 }
 
 class Cell extends React.PureComponent<CellProps> {
-    onClick(event: any) {
+    onClick(event: React.MouseEvent) {
+        if (event.ctrlKey) {
+            // In this case, onRightClick will have already handled the event.  In Safari though, both handlers get
+            // called
+            return
+        }
         this.props.handleCellClick(this.props.row, this.props.column, event)
     }
 
-    onRightClick(event: any) {
+    onRightClick(event: React.MouseEvent) {
         // prevent context menu from appearing
         event.preventDefault();
         this.props.handleCellClick(this.props.row, this.props.column, event)
@@ -62,7 +67,7 @@ class Cell extends React.PureComponent<CellProps> {
 
 interface MinesweeperBoardProps {
     game: msg.MinesweeperGame
-    handleCellClick(row: number, column: number, event: any): void
+    handleCellClick(row: number, column: number, event: React.MouseEvent): void
 }
 
 export class MinesweeperBoard extends React.PureComponent<MinesweeperBoardProps> {

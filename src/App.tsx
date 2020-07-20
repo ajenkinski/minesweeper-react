@@ -75,7 +75,7 @@ class App extends React.Component<AppProps, AppState> {
         this.handleCellClick = this.handleCellClick.bind(this)
     }
 
-    handleCellClick(row: number, column: number, event: any) {
+    handleCellClick(row: number, column: number, event: React.MouseEvent) {
         // event object will get modified after handler returns, so don't try to access it in the setState handler,
         // since that might execute after this method returns.
         let command = CommandType.Clear;
