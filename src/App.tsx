@@ -138,12 +138,17 @@ class App extends React.Component<AppProps, AppState> {
         }
     }
 
+    /**
+     * Returns an onChange handler for an input element, which updates a state field with the element's current value.
+     *
+     * @param field The name of the state field to update
+     * @param converter A callable which will be called with the element's value to convert it before storing it in
+     *   state.
+     */
     linkStateHandler(field: string, converter: (value: string) => any = String) {
-        return (event: any) => {
+        return (event: React.ChangeEvent<HTMLInputElement>) => {
             const value = converter(event.target.value);
-            return this.setState(state => {
-                return this.setState({...state, [field]: value})
-            })
+            this.setState(state => ({...state, [field]: value}))
         }
     }
 
