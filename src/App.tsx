@@ -10,45 +10,6 @@ enum CommandType {
     MarkMaybe
 }
 
-/**
- * Clear all neighbors of a cleared cell.  The cell must must be already exposed, not have an exploded mine, and must
- * have the correct number of surrounding mines already marked.  If these conditions are met, then this function
- * will call clearCell on all covered neighbors of this cell which are not marked with a mine.
- *
- * Returns the new game state with neighbors cleared, or the input game if conditions described above aren't met.
- *
- * @param game Game object
- * @param row Row of cell
- * @param column Column of cell
- */
-function clearNeighbors(game: msg.MinesweeperGame, row: number, column: number): msg.MinesweeperGame {
-    const cell = game.cellState(row, column);
-    if (cell.kind !== 'exposed') {
-        return game
-    }
-
-    // count marked neighbors
-    const neighbors = game.neighbors(row, column);
-    const numMarked = neighbors.reduce((n, [_, celln]) => {
-        if (celln.kind === 'covered' && celln.marker === msg.Marker.Mine) {
-            return n + 1
-        }
-        return n
-    }, 0);
-
-    // only clear if correct number of neighbors are marked
-    if (numMarked !== cell.numMinesNearby) {
-        return game
-    }
-
-    return neighbors.reduce((game_, [[r, c], cell_]) => {
-        if (cell_.kind === 'covered' && cell_.marker !== msg.Marker.Mine) {
-            return game_.clearCell(r, c)
-        }
-        return game_
-    }, game)
-}
-
 interface AppProps {
     name: string
 }
@@ -100,6 +61,10 @@ class App extends React.Component<AppProps, AppState> {
             switch (command) {
                 case CommandType.Clear:
                     newGame = game.clearCell(row, column);
+                    let newCell = newGame.cellState(row, column);
+                    if (newCell.kind === 'exposed' && newCell.numMinesNearby === 0) {
+                        newGame = newGame.clearNeighbors(row, column)
+                    }
                     break;
                 case CommandType.MarkMine:
                 case CommandType.MarkMaybe: {
@@ -110,7 +75,7 @@ class App extends React.Component<AppProps, AppState> {
                     break
                 }
                 case CommandType.ClearNeighbors: {
-                    newGame = clearNeighbors(game, row, column);
+                    newGame = game.clearNeighbors(row, column);
                     break
                 }
                 default:
