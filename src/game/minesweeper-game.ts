@@ -23,6 +23,12 @@ import _ from 'lodash'
 
 type Coord = [number, number];
 
+export enum GameStatus {
+    Win,
+    Lose,
+    InProgress
+}
+
 export enum Marker {
     Mine,
     Maybe
@@ -43,6 +49,7 @@ export interface GameInfo {
     numMines: number
     numMarkedMines: number
     numExploded: number
+    status: GameStatus
 }
 
 export type CellState = CoveredCellState | ExposedCellState
@@ -142,19 +149,37 @@ export class MinesweeperGame {
     }
 
     get gameInfo(): GameInfo {
-        const info = this.state.cells.reduce((info, cell) => {
-                const hasMarkedMine = isExposed(cell.state) ? cell.state.exploded : cell.state.marker === Marker.Mine;
-                return {
-                    numMarkedMines: info.numMarkedMines + (hasMarkedMine ? 1 : 0),
-                    numExploded: info.numExploded + (isExposed(cell.state) && cell.state.exploded ? 1 : 0)
-                }
-            },
-            {
-                numMarkedMines: 0,
-                numExploded: 0
-            });
+        let stats = _.countBy(this.state.cells.toArray(), cell => {
+            if (isExposed(cell.state)) {
+                return cell.state.exploded ? 'exploded' : 'cleared'
+            } else {
+                return cell.state.marker === Marker.Mine ? 'mine' : 'covered'
+            }
+        });
 
-        return {...info, numMines: this.state.numMines}
+        stats = {
+            exploded: 0,
+            cleared: 0,
+            mine: 0,
+            covered: 0,
+            ...stats
+        };
+
+        let status: GameStatus;
+        if (stats.exploded > 0) {
+            status = GameStatus.Lose
+        } else if (stats.mine === this.state.numMines && stats.covered === 0) {
+            status = GameStatus.Win
+        } else {
+            status = GameStatus.InProgress
+        }
+
+        return {
+            numMines: this.state.numMines,
+            numExploded: stats.exploded,
+            numMarkedMines: stats.mine,
+            status: status
+        }
     }
 
     toJSON(): GameStateFields {
@@ -194,15 +219,12 @@ export class MinesweeperGame {
             return newGame.clearCell(row, column)
         }
 
-        let numMinesNearby = this.neighborCoords(row, column).filter(([r, c]) => this.cell(r, c).hasMine).length
-        let newState = this.state.setIn(
-            ['cells', this.getIndex(row, column), 'state'],
-            ExposedCellState({
-                exploded: oldCell.hasMine,
-                numMinesNearby
-            }));
-
-        return new MinesweeperGame(newState)
+        let numMinesNearby = this.neighborCoords(row, column).filter(([r, c]) => this.cell(r, c).hasMine).length;
+        let newCell = oldCell.set('state', ExposedCellState({
+            exploded: oldCell.hasMine,
+            numMinesNearby
+        }));
+        return this.setCell(row, column, newCell);
     }
 
     clearNeighbors(row: number, column: number): MinesweeperGame {

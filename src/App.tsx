@@ -48,7 +48,7 @@ class App extends React.Component<AppProps, AppState> {
 
         this.setState(state => {
             const game = state.game;
-            if (game.gameInfo.numExploded > 0) {
+            if (game.gameInfo.status !== msg.GameStatus.InProgress) {
                 return
             }
             const cell = game.cellState(row, column);
@@ -119,6 +119,18 @@ class App extends React.Component<AppProps, AppState> {
 
     render() {
         const info = this.state.game.gameInfo;
+        let statusMsg;
+        switch (info.status) {
+            case msg.GameStatus.InProgress:
+                statusMsg = 'In Progress';
+                break;
+            case msg.GameStatus.Lose:
+                statusMsg = 'You lose! :(';
+                break;
+            case msg.GameStatus.Win:
+                statusMsg = 'You win! :)';
+                break
+        }
         return (
             <div className="App">
                 <h1>{this.props.name}</h1>
@@ -149,6 +161,9 @@ class App extends React.Component<AppProps, AppState> {
                            value={this.state.numMines}
                            onChange={this.linkStateHandler('numMines', Number)}
                            id="num-mines"/>
+                </div>
+                <div style={{marginBottom: '5px'}}>
+                    Status: {statusMsg}
                 </div>
                 <div style={{marginBottom: '5px'}}>
                     Mines left: {info.numMines - info.numMarkedMines}
