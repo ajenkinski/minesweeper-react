@@ -149,6 +149,7 @@ export class MinesweeperGame {
     }
 
     get gameInfo(): GameInfo {
+        // categorize cells into exploded, cleared, mine, and covered, and count occurrences
         let stats = _.countBy(this.state.cells.toArray(), cell => {
             if (isExposed(cell.state)) {
                 return cell.state.exploded ? 'exploded' : 'cleared'
@@ -157,6 +158,7 @@ export class MinesweeperGame {
             }
         });
 
+        // apply defaults
         stats = {
             exploded: 0,
             cleared: 0,
@@ -252,7 +254,7 @@ export class MinesweeperGame {
 
             if (cellState.kind === 'exposed' && !cellState.exploded && cellState.numMinesNearby === 0) {
                 for (let [coord, ncell] of game.neighbors(row, column)) {
-                    if (ncell.kind === 'covered' && !_.find(cellsToClear, coord)) {
+                    if (ncell.kind === 'covered' && !_.find(cellsToClear, c => _.isEqual(c, coord))) {
                         cellsToClear.push(coord)
                     }
                 }
