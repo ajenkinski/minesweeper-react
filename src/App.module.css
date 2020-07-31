@@ -1,0 +1,9 @@
+.app {
+  /*text-align: center;*/
+}
+
+.gameConfig {
+  margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: 16ch 6ch;
+}

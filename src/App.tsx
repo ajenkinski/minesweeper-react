@@ -1,5 +1,5 @@
 import React from 'react';
-import './App.css';
+import styles from './App.module.css';
 import * as msg from './game/minesweeper-game';
 import {MinesweeperBoard} from './MinesweeperBoard'
 
@@ -132,7 +132,7 @@ class App extends React.Component<AppProps, AppState> {
                 break
         }
         return (
-            <div className="App">
+            <div className={styles.app}>
                 <h1>{this.props.name}</h1>
                 <ul>
                     <li>Click a covered cell to clear it</li>
@@ -140,24 +140,24 @@ class App extends React.Component<AppProps, AppState> {
                     <li>Right-click or Ctrl-click to mark a cell as a mine</li>
                     <li>Alt-click or Option-click to mark a cell with ?</li>
                 </ul>
-                <div className="game-config">
+                <div className={styles.gameConfig}>
                     <label htmlFor="num-rows">Number of rows: </label>
                     <input type="number"
-                           className="number-input"
+                           className={styles.numberInput}
                            value={this.state.numRows}
                            onChange={this.linkStateHandler('numRows', Number)}
                            id="num-rows"/>
 
                     <label htmlFor="num-columns">Number of columns: </label>
                     <input type="number"
-                           className="number-input"
+                           className={styles.numberInput}
                            value={this.state.numColumns}
                            onChange={this.linkStateHandler('numColumns', Number)}
                            id="num-columns"/>
 
                     <label htmlFor="num-mines">Number of mines: </label>
                     <input type="number"
-                           className="number-input"
+                           className={styles.numberInput}
                            value={this.state.numMines}
                            onChange={this.linkStateHandler('numMines', Number)}
                            id="num-mines"/>

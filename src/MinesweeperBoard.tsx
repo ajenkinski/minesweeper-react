@@ -1,6 +1,6 @@
 import React from 'react';
 import * as msg from './game/minesweeper-game';
-import './MinesweeperBoard.css';
+import styles from './MinesweeperBoard.module.css';
 import mine_icon from './mine.svg';
 import flag_icon from './flag.svg';
 
@@ -30,14 +30,14 @@ class Cell extends React.PureComponent<CellProps> {
     render() {
         const cell = this.props.cell;
         let content: any = ' ';
-        const cssClasses = ['cell'];
+        const cssClasses = [styles.cell];
 
         if (msg.isExposed(cell)) {
             if (cell.exploded) {
-                cssClasses.push('cell-exploded');
+                cssClasses.push(styles.cellExploded);
                 content = <img src={mine_icon} alt={'mine'}/>;
             } else {
-                cssClasses.push('cell-exposed');
+                cssClasses.push(styles.cellExposed);
                 const num = cell.numMinesNearby;
                 if (num !== 0) {
                     content = `${num}`
@@ -91,11 +91,11 @@ export class MinesweeperBoard extends React.PureComponent<MinesweeperBoardProps>
             for (let colNum = 0; colNum < game.numColumns; colNum++) {
                 row[colNum] = this.renderCell(rowNum, colNum)
             }
-            rows[rowNum] = (<div key={rowNum} className="board-row">{row}</div>)
+            rows[rowNum] = (<div key={rowNum} className={styles.boardRow}>{row}</div>)
         }
 
         return (
-            <div className="board">
+            <div className={styles.board}>
                 {rows}
             </div>
         )
