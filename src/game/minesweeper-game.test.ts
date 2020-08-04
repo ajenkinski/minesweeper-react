@@ -25,7 +25,7 @@ describe('minesweeper', () => {
         const cell = game2.cellState(1, 2);
         expect(cell.kind).toEqual('covered');
         expect((cell as msg.CoveredCellState).marker).toEqual(msg.Marker.Mine)
-    });
+    })
 
     test('Clear cell with no bomb', () => {
         const game2 = game.clearCell(3, 4);
@@ -53,7 +53,7 @@ describe('minesweeper', () => {
         const game = new msg.MinesweeperGame(5, 6, 10).clearCell(0, 0);
         const numBombs = game['state'].cells.reduce((n, cell) => cell.hasMine ? n + 1 : n, 0);
         expect(numBombs).toEqual(10)
-    })
+    });
 
     test('First cleared cell does not contain bomb', () => {
         const game = new msg.MinesweeperGame(5, 6, 10);

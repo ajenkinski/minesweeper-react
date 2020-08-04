@@ -221,11 +221,7 @@ export class MinesweeperGame {
             return newGame.clearCell(row, column)
         }
 
-        let numMinesNearby = this.neighborCoords(row, column).filter(([r, c]) => this.cell(r, c).hasMine).length;
-        let newCell = oldCell.set('state', ExposedCellState({
-            exploded: oldCell.hasMine,
-            numMinesNearby
-        }));
+        const newCell = oldCell.set('state', this.getClearedCellState(row, column));
         return this.setCell(row, column, newCell);
     }
 
@@ -241,27 +237,35 @@ export class MinesweeperGame {
             return this
         }
 
-        const cellsToClear: Coord[] = this.neighbors(row, column)
+        const indexesToClear: Set<number> = new Set(this.neighbors(row, column)
             .filter(([_, c]) => c.kind === 'covered' && c.marker !== Marker.Mine)
-            .map(([coord, _]) => coord);
+            .map(([[r, c], _]) => this.getIndex(r, c)));
 
-        let game: MinesweeperGame = this;
-        while (cellsToClear.length > 0) {
-            const [row, column] = cellsToClear.pop()!;
-            game = game.clearCell(row, column);
+        const indexToCoord = (index: number): Coord => {
+            return [Math.floor(index / this.numColumns), index % this.numColumns]
+        }
 
-            let cellState = game.cell(row, column).state;
+        const newCells = this.state.cells.withMutations(cells => {
+            while (indexesToClear.size > 0) {
+                let index = indexesToClear.values().next().value
+                indexesToClear.delete(index)
 
-            if (cellState.kind === 'exposed' && !cellState.exploded && cellState.numMinesNearby === 0) {
-                for (let [coord, ncell] of game.neighbors(row, column)) {
-                    if (ncell.kind === 'covered' && !_.find(cellsToClear, c => _.isEqual(c, coord))) {
-                        cellsToClear.push(coord)
+                const [row, column] = indexToCoord(index)
+                const cellState = this.getClearedCellState(row, column)
+                cells = cells.set(index, cells.get(index)!.set('state', cellState))
+
+                if (cellState.kind === 'exposed' && !cellState.exploded && cellState.numMinesNearby === 0) {
+                    for (const coord of this.neighborCoords(row, column)) {
+                        const ncell = cells.get(this.getIndex(coord[0], coord[1]))!.state
+                        if (ncell.kind === 'covered') {
+                            indexesToClear.add(this.getIndex(coord[0], coord[1]))
+                        }
                     }
                 }
             }
-        }
+        })
 
-        return game
+        return new MinesweeperGame(this.state.set('cells', newCells))
     }
 
     markCell(row: number, column: number, marker?: Marker): MinesweeperGame {
@@ -282,6 +286,14 @@ export class MinesweeperGame {
         if (row < 0 || row >= this.numRows || column < 0 || column >= this.numColumns) {
             throw Error(`{row: ${row}, col: ${column}} out of bounds.  numRows: ${this.numRows}, numColumns: ${this.numColumns}`)
         }
+    }
+
+    private getClearedCellState(row: number, column: number): CellState {
+        let numMinesNearby = this.neighborCoords(row, column).filter(([r, c]) => this.cell(r, c).hasMine).length;
+        return ExposedCellState({
+            exploded: this.cell(row, column).hasMine,
+            numMinesNearby
+        })
     }
 
     private cell(row: number, column: number): RecordOf<Cell> {
